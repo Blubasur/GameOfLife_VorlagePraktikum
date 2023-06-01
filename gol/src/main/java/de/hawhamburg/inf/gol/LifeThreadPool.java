@@ -33,9 +33,9 @@ public class LifeThreadPool {
      */
     public void barrier() throws InterruptedException {
         // TODO
-        synchronized (tasks) {
+        synchronized (this) {
             while (!tasks.isEmpty()) {
-                tasks.wait();
+                this.wait();
             }
         }
     }
@@ -54,22 +54,24 @@ public class LifeThreadPool {
      * @throws InterruptedException
      */
     public void joinAndExit() throws InterruptedException {
-        barrier();
-        interrupt();
+        synchronized (this) {
+            barrier();
+            interrupt();
+        }
+
     }
-   
+
     /**
      * Adds a task to the queue of this pool.
      *
      * @param task Runnable containing the work to be done
      */
-        
     public void submit(Runnable task) {
-        synchronized (tasks) {
-             tasks.offer(task);
-             tasks.notify();
+        synchronized (this) {
+            tasks.add(task);
+            this.notifyAll();
         }
-       
+
     }
 
     /**
@@ -80,12 +82,13 @@ public class LifeThreadPool {
      * @throws InterruptedException
      */
     public Runnable nextTask() throws InterruptedException {
-        synchronized (tasks) {
-            while (tasks.isEmpty()) {                
-                tasks.wait();
+        synchronized (this) {
+            while (tasks.isEmpty()) {
+                this.wait();
             }
-            return tasks.poll();
-        }
+             this.notify();
+        return tasks.poll();
+        }  
     }
 
     /**
@@ -94,6 +97,8 @@ public class LifeThreadPool {
     public void start() {
         for (int i = 0; i < numThreads; i++) {
             threads[i] = new LifeThread(this);
+            threads[i].start();
+
         }
     }
 }

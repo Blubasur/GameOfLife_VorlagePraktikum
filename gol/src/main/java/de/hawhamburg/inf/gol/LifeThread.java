@@ -30,9 +30,9 @@ public class LifeThread extends Thread {
     public void run() {
         while (!isInterrupted) {
             try {
-                pool.nextTask();
+                pool.nextTask().run();
             } catch (InterruptedException e) {
-                pool.interrupt();
+                interrupt();
                 break;
             }
         }
